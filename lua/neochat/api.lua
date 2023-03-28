@@ -18,18 +18,16 @@ function M.chat_completions(messages, opts)
         args = { 'scripts/neochat.py' },
         cwd = config.options.cwd,
         stdio = { pipe_stdin, pipe_stdout, pipe_stderr },
-    }, function(code)
-        uv.close(pipe_stdout)
-        uv.close(pipe_stderr)
+    }, function(code, signal)
+        pipe_stdout:close()
+        pipe_stderr:close()
 
         if handle then
-            handle:close()
+        handle:close()
         end
 
-        if code ~= 0 then
-            vim.notify('neochat.py exited with code' .. code, vim.log.levels.ERROR, {
-                title = 'NeoChat',
-            })
+        if opts.on_exit then
+            opts.on_exit(code, signal)
         end
     end)
     assert(handle, 'spawn failed')
@@ -40,6 +38,10 @@ function M.chat_completions(messages, opts)
 
     uv.write(pipe_stdin, vim.fn.json_encode(messages))
     uv.shutdown(pipe_stdin)
+
+    if opts.on_start then
+        opts.on_start()
+    end
 end
 
 return M

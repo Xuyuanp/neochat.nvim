@@ -1,7 +1,7 @@
 local M = {}
 
 local function get_root_dir()
-    local str = debug.getinfo(2, 'S').source:sub(2)
+    local str = debug.getinfo(1, 'S').source:sub(2)
     -- lua/neochat/config.lua
     return vim.fn.fnamemodify(str, ':h:h:h')
 end

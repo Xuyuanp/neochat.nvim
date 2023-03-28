@@ -179,6 +179,9 @@ function Chat:perform_request()
     vim.api.nvim_win_set_cursor(self.popup_conversation.winid, { line_count, 0 })
 
     api.chat_completions(self.messages, {
+        on_start = function() end,
+---@diagnostic disable-next-line: unused-local
+        on_exit = function(code, signal) end,
         on_stdout = function(err, data)
             assert(not err, err)
             self:on_delta(data)
@@ -186,12 +189,9 @@ function Chat:perform_request()
         on_stderr = function(err, data)
             assert(not err, err)
             if data then
-                vim.notify(
-                    'got error: ' .. data,
-                    vim.log.levels.ERROR({
-                        title = 'NeoChat',
-                    })
-                )
+                vim.notify('got error: ' .. data, vim.log.levels.ERROR, {
+                    title = 'NeoChat',
+                })
             end
         end,
     })
