@@ -2,6 +2,7 @@ local Popup = require('nui.popup')
 local Layout = require('nui.layout')
 local event = require('nui.utils.autocmd').event
 local NuiText = require('nui.text')
+local config = require('neochat.config')
 
 local api = require('neochat.api')
 
@@ -169,8 +170,27 @@ function Chat:on_submit()
 end
 
 function Chat:perform_request()
-    local line_count = vim.api.nvim_buf_line_count(self.popup_conversation.bufnr)
-    ChatGPT():render(self.popup_conversation.bufnr, -1, line_count, 0, line_count, 0)
+    self.spinner_idx = 1
+    local head_line = vim.api.nvim_buf_line_count(self.popup_conversation.bufnr)
+    local chatgpt = ChatGPT()
+    local head_len = chatgpt:content():len()
+    chatgpt:render(self.popup_conversation.bufnr, -1, head_line, 0, head_line, 0)
+    NuiText(' ', 'Function'):render(self.popup_conversation.bufnr, -1, head_line, head_len, head_line, head_len)
+    NuiText(config.options.spinners[self.spinner_idx], 'Comment'):render_char(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+
+    local timer = vim.loop.new_timer()
+    assert(timer)
+    timer:start(
+        0,
+        100,
+        vim.schedule_wrap(function()
+            self.spinner_idx = self.spinner_idx + 1
+            if self.spinner_idx > #config.options.spinners then
+                self.spinner_idx = 1
+            end
+            NuiText(config.options.spinners[self.spinner_idx], 'Comment'):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+        end)
+    )
 
     -- add newline
     vim.api.nvim_buf_set_lines(self.popup_conversation.bufnr, -1, -1, false, { '' })
@@ -180,8 +200,13 @@ function Chat:perform_request()
 
     api.chat_completions(self.messages, {
         on_start = function() end,
----@diagnostic disable-next-line: unused-local
-        on_exit = function(code, signal) end,
+        ---@diagnostic disable-next-line: unused-local
+        on_exit = function(code, signal)
+            timer:stop()
+            vim.schedule(function()
+                NuiText('', 'String'):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+            end)
+        end,
         on_stdout = function(err, data)
             assert(not err, err)
             self:on_delta(data)
