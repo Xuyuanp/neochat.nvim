@@ -185,7 +185,14 @@ function Chat:perform_request()
         end,
         on_stderr = function(err, data)
             assert(not err, err)
-            print(data)
+            if data then
+                vim.notify(
+                    'got error: ' .. data,
+                    vim.log.levels.ERROR({
+                        title = 'NeoChat',
+                    })
+                )
+            end
         end,
     })
 
