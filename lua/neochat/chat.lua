@@ -56,17 +56,11 @@ function Chat.new()
     })
 
     local layout = Layout(
-        {
-            position = '50%',
-            size = {
-                width = '60%',
-                height = '80%',
-            },
-        },
+        config.options.layout_opts,
         Layout.Box({
-            Layout.Box(popup_conversation, { size = '75%' }),
-            Layout.Box(popup_input, { size = '25%' }),
-        }, { dir = 'col' })
+            Layout.Box(popup_conversation, config.options.layout_box.conversation_opts),
+            Layout.Box(popup_input, config.options.layout_box.input_opts),
+        }, config.options.layout_box.opts)
     )
 
     local chat = setmetatable({
@@ -102,6 +96,16 @@ function Chat:init()
     end, { noremap = false })
 
     self.popup_conversation:map('n', '<Down>', function()
+        -- focus on input
+        vim.api.nvim_set_current_win(self.popup_input.winid)
+    end, { noremap = false })
+
+    self.popup_input:map('n', '<Tab>', function()
+        -- focus on conversation
+        vim.api.nvim_set_current_win(self.popup_conversation.winid)
+    end, { noremap = false })
+
+    self.popup_conversation:map('n', '<Tab>', function()
         -- focus on input
         vim.api.nvim_set_current_win(self.popup_input.winid)
     end, { noremap = false })

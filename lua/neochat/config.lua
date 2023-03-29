@@ -9,6 +9,27 @@ end
 local default_options = {
     python_exepath = vim.fn.exepath('python') or vim.fn.exepath('python3'),
     spinners = 'dots_negative',
+    layout_opts = {
+        relative = 'editor',
+        position = '50%',
+        size = {
+            width = '60%',
+            height = '80%',
+        },
+    },
+    layout_box = {
+        conversation_opts = {
+            size = '75%',
+        },
+        input_opts = {
+            size = '25%',
+        },
+        opts = {
+            dir = 'row', -- col or row
+            -- grow: number
+            -- size: number/string/table
+        },
+    },
 }
 
 function M.setup(opts)
