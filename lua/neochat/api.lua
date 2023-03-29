@@ -15,15 +15,14 @@ function M.chat_completions(messages, opts)
 
     local handle
     handle = uv.spawn(config.options.python_exepath, {
-        args = { 'scripts/neochat.py' },
-        cwd = config.options.cwd,
+        args = { vim.api.nvim_get_runtime_file('scripts/neochat.py', false)[1] },
         stdio = { pipe_stdin, pipe_stdout, pipe_stderr },
     }, function(code, signal)
         pipe_stdout:close()
         pipe_stderr:close()
 
         if handle then
-        handle:close()
+            handle:close()
         end
 
         if opts.on_exit then

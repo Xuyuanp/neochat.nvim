@@ -8,9 +8,7 @@ def main():
     messages = json.load(sys.stdin)
 
     rsps = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", 
-        messages=messages, 
-        stream=True
+        model="gpt-3.5-turbo", messages=messages, stream=True
     )
     for rsp in rsps:
         assert isinstance(rsp, dict)
