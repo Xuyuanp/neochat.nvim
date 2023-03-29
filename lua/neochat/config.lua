@@ -25,7 +25,7 @@ local default_options = {
             size = '25%',
         },
         opts = {
-            dir = 'row', -- col or row
+            dir = 'col', -- col or row
             -- grow: number
             -- size: number/string/table
         },
