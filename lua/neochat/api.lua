@@ -15,7 +15,7 @@ function M.chat_completions(messages, opts)
 
     local handle
     handle = uv.spawn(config.options.python_exepath, {
-        args = { vim.api.nvim_get_runtime_file('scripts/neochat.py', false)[1] },
+        args = { vim.api.nvim_get_runtime_file('scripts/neochat.py', false)[1], 'chat' },
         stdio = { pipe_stdin, pipe_stdout, pipe_stderr },
     }, function(code, signal)
         pipe_stdout:close()
@@ -35,7 +35,8 @@ function M.chat_completions(messages, opts)
 
     uv.read_start(pipe_stderr, opts.on_stderr)
 
-    uv.write(pipe_stdin, vim.fn.json_encode(messages))
+    local args = vim.tbl_deep_extend('force', config.options.openai.chat_completions, { messages = messages })
+    uv.write(pipe_stdin, vim.fn.json_encode(args))
     uv.shutdown(pipe_stdin)
 
     if opts.on_start then

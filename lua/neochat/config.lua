@@ -24,6 +24,19 @@ local default_options = {
             -- size: number/string/table
         },
     },
+    openai = {
+        chat_completions = {
+            model = 'gpt-3.5-turbo',
+            stream = true,
+            -- temperature
+            -- top_p
+            -- n,
+            -- max_tokens
+            -- presence_penalty
+            -- frequency_penalty
+            -- logit_bias
+        },
+    },
 }
 
 function M.setup(opts)
