@@ -29,6 +29,9 @@ Using `lazy.nvim`
     end,
     dependencies = {
         'MunifTanjim/nui.nvim',
+        -- optional
+        'nvim-telescope/telescope.nvim',
+        'f/awesome-chatgpt-prompts'
     },
     config = function()
         require('neochat').setup({
