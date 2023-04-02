@@ -3,6 +3,7 @@ local Layout = require('nui.layout')
 local event = require('nui.utils.autocmd').event
 local NuiText = require('nui.text')
 local config = require('neochat.config')
+local prompts = require('neochat.prompts')
 
 local api = require('neochat.api')
 
@@ -81,6 +82,17 @@ function Chat:init()
     self.popup_input:on({ event.BufWinEnter }, function()
         vim.cmd('startinsert')
     end, { once = true })
+
+    if config.options.openai.actas.enable then
+        self.popup_input:on({ event.TextChangedI }, function()
+            local lines = vim.api.nvim_buf_get_lines(self.popup_input.bufnr, 0, 1, false)
+            if lines and #lines == 1 and lines[1] == config.options.openai.actas.keyword then
+                vim.schedule(function()
+                    self:pick_prompts()
+                end)
+            end
+        end)
+    end
 
     self.popup_input:map('i', '<S-CR>', '<ESC>o', { noremap = true })
     self.popup_input:map('i', '<C-CR>', function()
@@ -212,7 +224,13 @@ function Chat:perform_request()
             end)
         end,
         on_stdout = function(err, data)
-            assert(not err, err)
+            if err then
+                vim.notify('got error: ' .. err, vim.log.levels.ERROR, {
+                    title = 'NeoChat',
+                })
+                return
+            end
+
             self:on_delta(data)
         end,
         on_stderr = function(err, data)
@@ -258,6 +276,12 @@ function Chat:on_delta(data)
 
         -- move cursor to the end
         vim.api.nvim_win_set_cursor(self.popup_conversation.winid, { row, col })
+    end)
+end
+
+function Chat:pick_prompts()
+    prompts.pick(function(prompt)
+        vim.api.nvim_buf_set_lines(self.popup_input.bufnr, 0, -1, false, { prompt.content })
     end)
 end
 

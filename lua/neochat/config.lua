@@ -36,6 +36,10 @@ local default_options = {
             -- frequency_penalty
             -- logit_bias
         },
+        actas = {
+            enable = true,
+            keyword = 'actas',
+        },
     },
 }
 
