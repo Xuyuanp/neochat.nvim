@@ -80,7 +80,7 @@ function M.pick(on_select)
                     local selection = require('telescope.actions.state').get_selected_entry()
                     require('telescope.actions').close(prompt_bufnr)
 
-                    on_select(selection.prompt)
+                    on_select(selection.value)
                 end)
 
                 return true
