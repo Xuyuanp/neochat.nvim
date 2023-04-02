@@ -1,8 +1,9 @@
 # neochat.nvim
 
-GPTChat in neovim
+ChatGPT in neovim
 
-![](img/demo.gif)
+![preview](https://user-images.githubusercontent.com/2245664/229365814-000db288-c277-4fee-b367-a69e49534e85.gif)
+
 
 ## Please Be Cautious
 
