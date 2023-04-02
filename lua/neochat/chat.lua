@@ -195,7 +195,7 @@ function Chat:perform_request()
     NuiText(config.options.spinners[self.spinner_idx], 'Comment'):render_char(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
 
     local timer = vim.loop.new_timer()
-    assert(timer)
+    assert(timer) -- make linter happy
     timer:start(
         0,
         100,
@@ -217,13 +217,11 @@ function Chat:perform_request()
     api.chat_completions(self.messages, {
         on_start = function() end,
         ---@diagnostic disable-next-line: unused-local
-        on_exit = function(code, signal)
+        on_exit = vim.schedule_wrap(function(code, signal)
             timer:stop()
-            vim.schedule(function()
-                NuiText('', 'String'):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
-            end)
-        end,
-        on_stdout = function(err, data)
+            NuiText('', 'String'):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+        end),
+        on_stdout = vim.schedule_wrap(function(err, data)
             if err then
                 vim.notify('got error: ' .. err, vim.log.levels.ERROR, {
                     title = 'NeoChat',
@@ -232,15 +230,15 @@ function Chat:perform_request()
             end
 
             self:on_delta(data)
-        end,
-        on_stderr = function(err, data)
+        end),
+        on_stderr = vim.schedule_wrap(function(err, data)
             assert(not err, err)
             if data then
                 vim.notify('got error: ' .. data, vim.log.levels.ERROR, {
                     title = 'NeoChat',
                 })
             end
-        end,
+        end),
     })
 
     table.insert(self.messages, {
@@ -258,25 +256,23 @@ function Chat:on_delta(data)
         self.messages[#self.messages].content = content .. data
     end
 
-    vim.schedule(function()
-        local line_count = vim.api.nvim_buf_line_count(self.popup_conversation.bufnr)
-        local last_line = vim.api.nvim_buf_get_lines(self.popup_conversation.bufnr, -2, -1, false)[1] or ''
-        local row = line_count
-        local col = last_line:len()
+    local line_count = vim.api.nvim_buf_line_count(self.popup_conversation.bufnr)
+    local last_line = vim.api.nvim_buf_get_lines(self.popup_conversation.bufnr, -2, -1, false)[1] or ''
+    local row = line_count
+    local col = last_line:len()
 
-        local lines = vim.split(data, '\n', { plain = true })
-        vim.api.nvim_buf_set_text(self.popup_conversation.bufnr, row - 1, col, row - 1, col, lines)
+    local lines = vim.split(data, '\n', { plain = true })
+    vim.api.nvim_buf_set_text(self.popup_conversation.bufnr, row - 1, col, row - 1, col, lines)
 
-        row = row + #lines - 1
-        if #lines > 1 then
-            col = lines[#lines]:len()
-        else
-            col = col + lines[#lines]:len()
-        end
+    row = row + #lines - 1
+    if #lines > 1 then
+        col = lines[#lines]:len()
+    else
+        col = col + lines[#lines]:len()
+    end
 
-        -- move cursor to the end
-        vim.api.nvim_win_set_cursor(self.popup_conversation.winid, { row, col })
-    end)
+    -- move cursor to the end
+    vim.api.nvim_win_set_cursor(self.popup_conversation.winid, { row, col })
 end
 
 function Chat:pick_prompts()
