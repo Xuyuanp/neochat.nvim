@@ -94,7 +94,9 @@ function Chat:init()
         end)
     end
 
-    self.popup_input:map('i', '<S-CR>', '<ESC>o', { noremap = true })
+    self.popup_input:map('i', '<S-CR>', function()
+        vim.api.nvim_feedkeys('\n', 'i', true)
+    end, { noremap = true })
     self.popup_input:map('i', '<C-CR>', function()
         self:clear()
     end, { noremap = true })
