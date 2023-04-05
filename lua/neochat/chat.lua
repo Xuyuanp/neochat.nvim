@@ -7,20 +7,30 @@ local prompts = require('neochat.prompts')
 
 local api = require('neochat.api')
 
-local function You()
-    -- TODO: add highlight group
+local function you_text()
     return NuiText('#  @You:', 'Keyword')
 end
 
-local function ChatGPT()
-    -- TODO: add highlight group
+local function chatgpt_text()
     return NuiText('# 󰚩 @ChatGPT:', 'Function')
+end
+
+local function spinner_text(idx)
+    return NuiText(config.options.spinners[idx], 'Comment')
+end
+
+local function done_text()
+    return NuiText('', 'String')
+end
+
+local function error_text()
+    return NuiText('', 'Error')
 end
 
 local Chat = {}
 
-function Chat.new()
-    local popup_conversation = Popup({
+local function create_popup_conversation()
+    return Popup({
         border = {
             style = 'rounded',
             text = {
@@ -36,8 +46,10 @@ function Chat.new()
             conceallevel = 1,
         },
     })
+end
 
-    local popup_input = Popup({
+local function create_popup_input()
+    return Popup({
         border = {
             style = 'rounded',
             text = {
@@ -55,14 +67,22 @@ function Chat.new()
             wrap = true,
         },
     })
+end
 
-    local layout = Layout(
+local function create_layout(popup_conversation, popup_input)
+    return Layout(
         config.options.layout_opts,
         Layout.Box({
             Layout.Box(popup_conversation, config.options.layout_box.conversation_opts),
             Layout.Box(popup_input, config.options.layout_box.input_opts),
         }, config.options.layout_box.opts)
     )
+end
+
+function Chat.new()
+    local popup_conversation = create_popup_conversation()
+    local popup_input = create_popup_input()
+    local layout = create_layout(popup_conversation, popup_input)
 
     local chat = setmetatable({
         hidden = false,
@@ -73,8 +93,8 @@ function Chat.new()
     }, { __index = Chat })
 
     chat:init()
-
     layout:mount()
+
     return chat
 end
 
@@ -153,7 +173,7 @@ end
 function Chat:append_input(input)
     -- send to chat
     local line_count = vim.api.nvim_buf_line_count(self.popup_conversation.bufnr)
-    You():render(self.popup_conversation.bufnr, -1, line_count, 0, line_count, 0)
+    you_text():render(self.popup_conversation.bufnr, -1, line_count, 0, line_count, 0)
     -- print input
     vim.api.nvim_buf_set_lines(self.popup_conversation.bufnr, -1, -1, false, input)
     -- add two new lines
@@ -190,11 +210,11 @@ end
 function Chat:perform_request()
     self.spinner_idx = 1
     local head_line = vim.api.nvim_buf_line_count(self.popup_conversation.bufnr)
-    local chatgpt = ChatGPT()
+    local chatgpt = chatgpt_text()
     local head_len = chatgpt:content():len()
     chatgpt:render(self.popup_conversation.bufnr, -1, head_line, 0, head_line, 0)
     NuiText(' ', 'Function'):render(self.popup_conversation.bufnr, -1, head_line, head_len, head_line, head_len)
-    NuiText(config.options.spinners[self.spinner_idx], 'Comment'):render_char(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+    spinner_text(self.spinner_idx):render_char(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
 
     local timer = vim.loop.new_timer()
     assert(timer) -- make linter happy
@@ -206,7 +226,7 @@ function Chat:perform_request()
             if self.spinner_idx > #config.options.spinners then
                 self.spinner_idx = 1
             end
-            NuiText(config.options.spinners[self.spinner_idx], 'Comment'):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+            spinner_text(self.spinner_idx):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
         end)
     )
 
@@ -221,7 +241,13 @@ function Chat:perform_request()
         ---@diagnostic disable-next-line: unused-local
         on_exit = vim.schedule_wrap(function(code, signal)
             timer:stop()
-            NuiText('', 'String'):render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
+            local res_mark
+            if code == 0 then
+                res_mark = done_text()
+            else
+                res_mark = error_text()
+            end
+            res_mark:render(self.popup_conversation.bufnr, -1, head_line, head_len + 1)
         end),
         on_stdout = vim.schedule_wrap(function(err, data)
             if err then
