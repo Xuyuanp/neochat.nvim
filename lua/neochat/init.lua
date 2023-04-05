@@ -5,7 +5,7 @@ function M.setup(opts)
 end
 
 function M.toggle()
-    if not M.chat then
+    if not M.chat or not M.chat:mounted() then
         M.chat = require('neochat.chat').new()
         return
     end

@@ -309,4 +309,8 @@ function Chat:pick_prompts()
     end)
 end
 
+function Chat:mounted()
+    return self.layout._.mounted
+end
+
 return Chat
