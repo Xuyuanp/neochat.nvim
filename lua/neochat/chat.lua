@@ -1,10 +1,10 @@
-local Popup = require('nui.popup')
 local Layout = require('nui.layout')
 local event = require('nui.utils.autocmd').event
 
 local config = require('neochat.config')
 local prompts = require('neochat.prompts')
 local Conversation = require('neochat.conversation')
+local Input = require('neochat.input')
 
 local Chat = {}
 
@@ -28,7 +28,7 @@ local function create_popup_conversation()
 end
 
 local function create_popup_input()
-    return Popup({
+    return Input({
         border = {
             style = 'rounded',
             text = {
@@ -104,23 +104,19 @@ function Chat:init()
     end, { noremap = false })
 
     self.popup_input:map('n', '<Up>', function()
-        -- focus on conversation
         self.popup_conversation:focus()
     end, { noremap = false })
 
     self.popup_conversation:map('n', '<Down>', function()
-        -- focus on input
-        vim.api.nvim_set_current_win(self.popup_input.winid)
+        self.popup_input:focus()
     end, { noremap = false })
 
     self.popup_input:map('n', '<Tab>', function()
-        -- focus on conversation
         self.popup_conversation:focus()
     end, { noremap = false })
 
     self.popup_conversation:map('n', '<Tab>', function()
-        -- focus on input
-        vim.api.nvim_set_current_win(self.popup_input.winid)
+        self.popup_input:focus()
     end, { noremap = false })
 
     self.popup_input:map('i', '<C-d>', function()
@@ -143,12 +139,7 @@ end
 
 function Chat:clear()
     self.popup_conversation:clear()
-
-    vim.api.nvim_buf_set_lines(self.popup_input.bufnr, 0, -1, false, {})
-end
-
-function Chat:clear_input()
-    vim.api.nvim_buf_set_lines(self.popup_input.bufnr, 0, -1, false, {})
+    self.popup_input:clear()
 end
 
 function Chat:get_input()
@@ -157,21 +148,19 @@ function Chat:get_input()
 end
 
 function Chat:on_submit()
-    local lines = self:get_input()
-    if not lines or lines[1] == '' then
+    local input = self.popup_input:get_text()
+    if not input then
         return
     end
 
-    -- clear input
-    self:clear_input()
+    self.popup_input:clear()
 
-    local input = lines
     self.popup_conversation:ask(input)
 end
 
 function Chat:pick_prompts()
     prompts.pick(function(prompt)
-        vim.api.nvim_buf_set_lines(self.popup_input.bufnr, 0, -1, false, { prompt.content })
+        self.popup_input:set_text(prompt.content)
     end)
 end
 
