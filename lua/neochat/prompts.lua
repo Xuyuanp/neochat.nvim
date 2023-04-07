@@ -50,9 +50,8 @@ function M.pick(on_select)
     end
 
     local pickers = require('telescope.pickers')
-    local previewers = require('telescope.previewers')
 
-    local previewer = previewers.new_buffer_previewer({
+    local previewer = require('telescope.previewers').new_buffer_previewer({
         ---@diagnostic disable-next-line: unused-local
         define_preview = function(self, entry, _status)
             vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, { entry.value.content })
@@ -60,33 +59,38 @@ function M.pick(on_select)
         end,
     })
 
-    pickers
-        .new({}, {
-            prompt_title = 'Prompts',
-            finder = require('telescope.finders').new_table({
-                results = prompts,
-                entry_maker = function(entry)
-                    return {
-                        value = entry,
-                        display = entry.act,
-                        ordinal = entry.act,
-                    }
-                end,
-            }),
-            sorter = require('telescope.config').values.generic_sorter({}),
-            previewer = previewer,
-            attach_mappings = function(prompt_bufnr, map)
-                map('i', '<CR>', function()
-                    local selection = require('telescope.actions.state').get_selected_entry()
-                    require('telescope.actions').close(prompt_bufnr)
+    local finder = require('telescope.finders').new_table({
+        results = prompts,
+        entry_maker = function(entry)
+            return {
+                value = entry,
+                display = entry.act,
+                ordinal = entry.act,
+            }
+        end,
+    })
 
-                    on_select(selection.value)
-                end)
+    local sorter = require('telescope.config').values.generic_sorter({})
 
-                return true
-            end,
-        })
-        :find()
+    local attach_mappings = function(prompt_bufnr, map)
+        map('i', '<CR>', function()
+            local selection = require('telescope.actions.state').get_selected_entry()
+            require('telescope.actions').close(prompt_bufnr)
+
+            on_select(selection.value)
+        end)
+
+        return true
+    end
+
+    local picker = pickers.new({}, {
+        prompt_title = 'Awesome Prompts',
+        finder = finder,
+        sorter = sorter,
+        previewer = previewer,
+        attach_mappings = attach_mappings,
+    })
+    picker:find()
 end
 
 return M

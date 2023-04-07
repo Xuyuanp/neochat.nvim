@@ -26,8 +26,9 @@ end
 
 local Conversation = Popup:extend('NeoChatConversation')
 
-function Conversation:init(opts)
-    Conversation.super.init(self, opts)
+---@param popup_opts table
+function Conversation:init(popup_opts)
+    Conversation.super.init(self, popup_opts)
 
     self.messages = {}
 end
@@ -37,17 +38,15 @@ function Conversation:clear()
     vim.api.nvim_buf_set_lines(self.bufnr, 0, -1, false, {})
 end
 
----@param input string or string[]
+---@param input string | string[]
 function Conversation:ask(input)
-    local content = input
-    if type(input) == 'table' then
-        content = vim.fn.join(input, '\n')
-    end
+    local content = type(input) == 'table' and vim.fn.join(input, '\n') or input
     table.insert(self.messages, {
         role = 'user',
         content = content,
     })
 
+    input = type(input) == 'table' and input or { input }
     self:_display_question(input)
     ---@diagnostic disable-next-line: param-type-mismatch
     vim.defer_fn(function()
@@ -60,6 +59,7 @@ function Conversation:focus()
     vim.api.nvim_set_current_win(self.winid)
 end
 
+---@param delta number
 function Conversation:scroll(delta)
     local function t(key)
         return vim.api.nvim_replace_termcodes(key, true, false, true)
@@ -76,9 +76,8 @@ function Conversation:scroll_to_bottom()
     vim.api.nvim_win_set_cursor(self.winid, { line_count, 0 })
 end
 
+---@param input string[]
 function Conversation:_display_question(input)
-    input = type(input) == 'table' and input or { input }
-
     -- send to chat
     local line_count = vim.api.nvim_buf_line_count(self.bufnr)
     you_text():render(self.bufnr, -1, line_count, 0, line_count, 0)
@@ -102,7 +101,7 @@ function Conversation:_display_response()
     local timer = vim.loop.new_timer()
     assert(timer) -- make linter happy
     timer:start(
-        0,
+        100,
         100,
         vim.schedule_wrap(function()
             self.spinner_idx = self.spinner_idx + 1
@@ -157,6 +156,7 @@ function Conversation:_display_response()
     })
 end
 
+---@param data string | nil
 function Conversation:_on_delta(data)
     if not data then
         -- output ends, print new line

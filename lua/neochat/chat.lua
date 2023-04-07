@@ -27,7 +27,7 @@ local function create_popup_conversation()
     })
 end
 
-local function create_popup_input()
+local function create_popup_input(opts)
     return Input({
         border = {
             style = 'rounded',
@@ -45,7 +45,7 @@ local function create_popup_input()
         win_options = {
             wrap = true,
         },
-    })
+    }, opts)
 end
 
 local function create_layout(popup_conversation, popup_input)
@@ -142,19 +142,11 @@ function Chat:clear()
     self.popup_input:clear()
 end
 
-function Chat:get_input()
-    local lines = vim.api.nvim_buf_get_lines(self.popup_input.bufnr, 0, -1, false)
-    return lines
-end
-
 function Chat:on_submit()
-    local input = self.popup_input:get_text()
-    if not input then
+    local input = self.popup_input:submit()
+    if not input or input[1] == '' then
         return
     end
-
-    self.popup_input:clear()
-
     self.popup_conversation:ask(input)
 end
 
