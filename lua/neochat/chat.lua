@@ -23,6 +23,7 @@ local function create_popup_conversation()
         win_options = {
             wrap = true,
             conceallevel = 1,
+            signcolumn = 'yes:1',
         },
     })
 end
@@ -130,11 +131,29 @@ end
 
 function Chat:toggle()
     if self.hidden then
-        self.layout:show()
+        self:show()
     else
-        self.layout:hide()
+        self:hide()
     end
-    self.hidden = not self.hidden
+end
+
+---@param input string[] | nil
+function Chat:show(input)
+    if self.hidden then
+        self.layout:show()
+        self.hidden = false
+    end
+
+    if input then
+        self.popup_input:set_text(input)
+    end
+end
+
+function Chat:hide()
+    if not self.hidden then
+        self.layout:hide()
+        self.hidden = true
+    end
 end
 
 function Chat:clear()
