@@ -71,7 +71,17 @@ end
 
 function Conversation:scroll_to_bottom()
     local line_count = vim.api.nvim_buf_line_count(self.bufnr)
-    vim.api.nvim_win_set_cursor(self.winid, { line_count, 0 })
+    self:_set_cursor(line_count, 0)
+end
+
+---@private
+---@param row number
+---@param col number
+function Conversation:_set_cursor(row, col)
+    if not self.winid then
+        return
+    end
+    vim.api.nvim_win_set_cursor(self.winid, { row, col })
 end
 
 ---@param input string[]
@@ -198,7 +208,7 @@ function Conversation:_on_delta(data)
     end
 
     -- move cursor to the end
-    vim.api.nvim_win_set_cursor(self.winid, { row, col })
+    self:_set_cursor(row, col)
 end
 
 return Conversation

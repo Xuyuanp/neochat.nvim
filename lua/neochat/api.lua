@@ -2,6 +2,8 @@ local config = require('neochat.config')
 
 local M = {}
 
+local script = vim.api.nvim_get_runtime_file('scripts/neochat.py', false)[1]
+
 function M.chat_completions(messages, opts)
     local uv = vim.loop
 
@@ -15,7 +17,7 @@ function M.chat_completions(messages, opts)
 
     local handle
     handle = uv.spawn(config.options.python_exepath, {
-        args = { vim.api.nvim_get_runtime_file('scripts/neochat.py', false)[1], 'chat' },
+        args = { script, 'chat' },
         stdio = { pipe_stdin, pipe_stdout, pipe_stderr },
     }, function(code, signal)
         pipe_stdout:close()
