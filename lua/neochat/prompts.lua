@@ -55,7 +55,7 @@ function M.pick(on_select)
         ---@diagnostic disable-next-line: unused-local
         define_preview = function(self, entry, _status)
             vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, { entry.value.content })
-            vim.api.nvim_win_set_option(self.state.winid, 'wrap', true)
+            vim.wo[self.state.winid].wrap = true
         end,
     })
 

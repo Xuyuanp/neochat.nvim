@@ -2,25 +2,24 @@ import argparse
 import json
 import sys
 
-import openai
+from openai import OpenAI
 
 
 # Define the function that is called when the 'chat' subcommand is specified
 def chat_completions():
     kwargs = json.load(sys.stdin)
 
-    rsp = openai.ChatCompletion.create(
+    client = OpenAI()
+    rsp = client.chat.completions.create(
         **kwargs,
     )
     if kwargs.get("stream", True):
         for chunk in rsp:
-            assert isinstance(chunk, dict)
-            content = chunk.get("choices", [{}])[0].get("delta", {}).get("content")
+            content = chunk.choices[0].delta.content
             if content is not None:
                 print(content, end="", flush=True)
     else:
-        assert isinstance(rsp, dict)
-        print(rsp.get("choices", [{}])[0].get("message", {}).get("content", ""))
+        print(rsp.choices[0].message.content)
 
 
 def main():

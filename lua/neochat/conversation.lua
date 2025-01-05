@@ -46,10 +46,8 @@ function Conversation:ask(input)
 
     input = type(input) == 'table' and input or { input }
     self:_display_question(input)
-    ---@diagnostic disable-next-line: param-type-mismatch
     vim.defer_fn(function()
         self:_display_response()
-        ---@diagnostic disable-next-line: param-type-mismatch
     end, 500)
 end
 
